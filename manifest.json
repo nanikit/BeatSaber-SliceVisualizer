@@ -5,10 +5,10 @@
   "author": "Igor null <m1el.2027@gmail.com>",
   "version": "0.1.3",
   "description": "Shows your cut data to train your accuracy",
-  "gameVersion": "1.13.4",
+  "gameVersion": "1.18.0",
   "dependsOn": {
     "BeatSaberMarkupLanguage": "^1.5.2",
     "BSIPA": "^4.1.6",
-    "SiraUtil": "^2.5.2"
+    "SiraUtil": "^3.0.0"
   }
 }

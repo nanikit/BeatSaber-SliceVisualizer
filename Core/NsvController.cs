@@ -7,7 +7,7 @@ using Zenject;
 using HMUI;
 using BeatSaberMarkupLanguage.Tags;
 using BeatSaberMarkupLanguage.Components.Settings;
-using SiraUtil.Tools;
+using SiraUtil.Logging;
 
 namespace SliceVisualizer.Core
 {

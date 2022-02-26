@@ -22,8 +22,9 @@ namespace SliceVisualizer
         public void Init(Logger logger, Config conf, Zenjector zenject)
         {
             Log = logger;
-            zenject.OnApp<NsvAppInstaller>().WithParameters(logger, conf.Generated<PluginConfig>());
-            zenject.OnGame<NsvGameInstaller>(false).ShortCircuitForTutorial();
+            zenject.UseLogger(logger);
+            zenject.Install<NsvAppInstaller>(Location.App, conf.Generated<PluginConfig>());
+            zenject.Install<NsvGameInstaller>(Location.GameCore);
         }
 
         [OnEnable, OnDisable]
