@@ -39,6 +39,7 @@ namespace SliceVisualizer.Core
             canvas.renderMode = RenderMode.WorldSpace;
             _canvasGO.transform.localScale = Vector3.one * _config.CanvasScale;
             _canvasGO.transform.localPosition = _config.CanvasOffset;
+            _canvasGO.transform.eulerAngles = _config.CanvasRotation;
             _beatmapObjectManager.noteWasCutEvent += OnNoteCut;
             for (var i = 0; i < MaxItems; i++)
             {
