@@ -14,26 +14,58 @@ namespace SliceVisualizer
         private Material? _uiNoGlowMaterial;
         private bool _loggedNoGlowMaterial = false;
 
-        public Material? UINoGlowMaterial {
-            get {
-                if (!(_uiNoGlowMaterial is null))
+        public Material? UINoGlowMaterial
+        {
+            get
+            {
+                if (_uiNoGlowMaterial != null)
                 {
                     return _uiNoGlowMaterial;
                 }
+
                 var sprite = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(m => m.name == "GameUISprite");
-                if (sprite is null)
+                if (sprite == null)
                 {
+                    var shader = Shader.Find("Custom/CustomParticles");
+                    if (shader != null)
+                    {
+                        _siraLog.Info("Found shader, create material from this.");
+                        _uiNoGlowMaterial = MakeUiMaterial(shader);
+                        return _uiNoGlowMaterial;
+                    }
                     if (!_loggedNoGlowMaterial)
                     {
                         _loggedNoGlowMaterial = true;
                         _siraLog.Error("Trying to get GameUISprite before it was loaded. This should not happen.");
+                        foreach (var material in Resources.FindObjectsOfTypeAll<Material>())
+                        {
+                            _siraLog.Debug($"material: {material.name}");
+                        }
                     }
-                    return null;
+                }
+                else
+                {
+                    _uiNoGlowMaterial = new Material(sprite);
                 }
 
-                _uiNoGlowMaterial = new Material(sprite);
                 return _uiNoGlowMaterial;
             }
+        }
+
+        private Material MakeUiMaterial(Shader shader)
+        {
+            var material = new Material(shader);
+            var keywords = new string[] {
+                "DECAL_ON", "ENABLE_VERTEX_COLOR", "ETC1_EXTERNAL_ALPHA", "HEIGHT_FOG", "SQUAREALPHA",
+                "SQUARE_ALPHA", "VERTEX_COLOR", "_EMISSION", "_FOGTYPE_ALPHA", "_VERTEXCHANNELS_RGBA",
+                "_WHITEBOOSTTYPE_NONE"
+            };
+            foreach (var keyword in keywords)
+            {
+                material.EnableKeyword(keyword);
+            }
+            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            return material;
         }
 
         public Sprite? RRect { get; private set; }
