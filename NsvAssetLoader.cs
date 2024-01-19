@@ -56,13 +56,15 @@ namespace SliceVisualizer
         {
             var material = new Material(shader);
             var keywords = new string[] {
-                "DECAL_ON", "ENABLE_VERTEX_COLOR", "ETC1_EXTERNAL_ALPHA", "HEIGHT_FOG", "SQUAREALPHA",
-                "SQUARE_ALPHA", "VERTEX_COLOR", "_EMISSION", "_FOGTYPE_ALPHA", "_VERTEXCHANNELS_RGBA",
-                "_WHITEBOOSTTYPE_NONE"
+                "VERTEX_COLOR", "_FOGTYPE_ALPHA", "SQUARE_ALPHA", "HEIGHT_FOG", "_DISSOLVEAXIS_LOCALX",
+                "_ALPHACHANNEL_ALPHA", "_MASKBLEND_MULTIPLY", "_MASK2BLEND_MULTIPLY", "_VERTEXCHANNELS_RGBA",
+                "DISTORTION_NONE", "DISTORTION_TARGET_MAIN", "_SECONDARY_UVS_NONE", "_CURVE_VERTICES_NONE",
+                "_SPECTROGRAM_NONE", "_EROSION_SOURCE_EROSION", "_CUTOUTTYPE_NONE", "_FOG_MASK_SOURCE_NONE",
+                "_OVERRIDE_FINAL_ALPHA_NONE",
             };
-            foreach (var keyword in keywords)
+            foreach (var name in keywords)
             {
-                material.EnableKeyword(keyword);
+                material.EnableKeyword(name);
             }
             material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             return material;
