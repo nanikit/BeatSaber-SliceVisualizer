@@ -261,9 +261,6 @@ namespace SliceVisualizer.Core
             _background.color = _color;
             _blockTransform.localRotation = Quaternion.Euler(0f, 0f, cubeRotation);
             _blockTransform.localPosition = new Vector3(cubeX, cubeY, 0f);
-
-            var arrowAlpha = _isDirectional ? 1f : 0f;
-            _arrow.color = Fade(_config.ArrowColor, arrowAlpha);
         }
 
         private void SetSliceState(NoteController noteController, NoteCutInfo noteCutInfo, float cubeRotation)
@@ -296,9 +293,10 @@ namespace SliceVisualizer.Core
                 _sliceColor = _saberColor;
             }
 
-            _arrowColor = noteCutInfo.directionOK ? _config.ArrowColor : _config.BadDirectionColor;
-
+            var arrowAlpha = _isDirectional ? 1f : 0f;
+            _arrowColor = Fade(noteCutInfo.directionOK ? _config.ArrowColor : _config.BadDirectionColor, arrowAlpha);
             _arrow.color = _arrowColor;
+
             _missedArea.color = _missedAreaColor;
             _slice.color = _slice.color;
 
