@@ -374,9 +374,16 @@ namespace SliceVisualizer.Core
                 _sliceColor = _saberColor;
             }
 
-            var arrowAlpha = _isDirectional ? 1f : 0f;
-            _arrowColor = Fade(noteCutInfo.directionOK ? _config.ArrowColor : _config.BadDirectionColor, arrowAlpha);
-            _arrow.color = _arrowColor;
+            if (_isDirectional)
+            {
+                _arrow.enabled = true;
+                _arrowColor = Fade(noteCutInfo.directionOK ? _config.ArrowColor : _config.BadDirectionColor, 1);
+                _arrow.color = _arrowColor;
+            }
+            else
+            {
+                _arrow.enabled = false;
+            }
 
             _missedArea.color = _missedAreaColor;
             _slice.color = _slice.color;
