@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Reflection;
 using SiraUtil.Logging;
 using UnityEngine;
@@ -9,76 +8,35 @@ namespace SliceVisualizer
 {
     internal class NsvAssetLoader : IInitializable, IDisposable
     {
-        private readonly SiraLog _siraLog;
-
         private Material? _uiNoGlowMaterial;
-        private bool _loggedNoGlowMaterial = false;
-
-        public Material? UINoGlowMaterial
-        {
-            get
-            {
-                if (_uiNoGlowMaterial != null)
-                {
-                    return _uiNoGlowMaterial;
-                }
-
-                var sprite = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(m => m.name == "GameUISprite");
-                if (sprite == null)
-                {
-                    var shader = Shader.Find("Custom/CustomParticles");
-                    if (shader != null)
-                    {
-                        _siraLog.Info("Found shader, create material from this.");
-                        _uiNoGlowMaterial = MakeUiMaterial(shader);
-                        return _uiNoGlowMaterial;
-                    }
-                    if (!_loggedNoGlowMaterial)
-                    {
-                        _loggedNoGlowMaterial = true;
-                        _siraLog.Error("Trying to get GameUISprite before it was loaded. This should not happen.");
-                        foreach (var material in Resources.FindObjectsOfTypeAll<Material>())
-                        {
-                            _siraLog.Debug($"material: {material.name}");
-                        }
-                    }
-                }
-                else
-                {
-                    _uiNoGlowMaterial = new Material(sprite);
-                }
-
-                return _uiNoGlowMaterial;
-            }
-        }
-
-        private Material MakeUiMaterial(Shader shader)
-        {
-            var material = new Material(shader);
-            var keywords = new string[] {
-                "VERTEX_COLOR", "_FOGTYPE_ALPHA", "SQUARE_ALPHA", "HEIGHT_FOG", "_DISSOLVEAXIS_LOCALX",
-                "_ALPHACHANNEL_ALPHA", "_MASKBLEND_MULTIPLY", "_MASK2BLEND_MULTIPLY", "_VERTEXCHANNELS_RGBA",
-                "DISTORTION_NONE", "DISTORTION_TARGET_MAIN", "_SECONDARY_UVS_NONE", "_CURVE_VERTICES_NONE",
-                "_SPECTROGRAM_NONE", "_EROSION_SOURCE_EROSION", "_CUTOUTTYPE_NONE", "_FOG_MASK_SOURCE_NONE",
-                "_OVERRIDE_FINAL_ALPHA_NONE",
-            };
-            foreach (var name in keywords)
-            {
-                material.EnableKeyword(name);
-            }
-            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            return material;
-        }
-
-        public Sprite? RRect { get; private set; }
-        public Sprite? Circle { get; private set; }
-        public Sprite? Arrow { get; private set; }
-        public Sprite? White { get; private set; }
+        private SiraLog _siraLog;
 
         public NsvAssetLoader(SiraLog siraLog)
         {
             _siraLog = siraLog;
+
+            var bundle = TryLoadAssetBundle();
+            if (bundle == null)
+            {
+                _siraLog.Warn($"Couldn't find shader asset bundle");
+                return;
+            }
+
+            var shader = bundle.LoadAsset<Shader>("Assets/UnlitGlow.shader");
+            _uiNoGlowMaterial = new Material(shader);
+
+            bundle.Unload(false);
         }
+
+        public Material UiNoGlowMaterial => _uiNoGlowMaterial ?? throw new InvalidOperationException("Asset loader not initialized");
+
+        public Sprite? RRect { get; private set; }
+
+        public Sprite? Circle { get; private set; }
+
+        public Sprite? Arrow { get; private set; }
+
+        public Sprite? White { get; private set; }
 
         public void Initialize()
         {
@@ -97,6 +55,13 @@ namespace SliceVisualizer
             Circle = null;
             Arrow = null;
             White = null;
+        }
+
+        private AssetBundle? TryLoadAssetBundle()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("SliceVisualizer.Assets.shaderbundle");
+            return stream == null ? null : AssetBundle.LoadFromStream(stream);
         }
 
         private Sprite? LoadSpriteFromResources(Assembly assembly, string resourcePath, float pixelsPerUnit = 256.0f)

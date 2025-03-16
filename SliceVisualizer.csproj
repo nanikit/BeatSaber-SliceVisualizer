@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <OutputType>Library</OutputType>
-    <LangVersion>8</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <RootNamespace>SliceVisualizer</RootNamespace>
@@ -42,6 +42,10 @@
       </Reference>
       <Reference Include="Unity.TextMeshPro">
         <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.AssetBundleModule">
+          <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+          <Private>False</Private>
       </Reference>
       <Reference Include="UnityEngine.CoreModule">
           <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
@@ -102,6 +106,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Assets\*.png" />
     <EmbeddedResource Include="Views\*.bsml" />
+    <EmbeddedResource Include="Assets\shaderbundle" />
     <EmbeddedResource Include="manifest.json" />
   </ItemGroup>
   <ItemGroup>

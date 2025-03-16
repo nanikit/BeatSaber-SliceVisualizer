@@ -24,13 +24,34 @@ namespace SliceVisualizer.Core
 
         private float _aliveTime;
         private bool _isDirectional;
-        public bool isActive { get; private set; }
         private Color _color;
         private Color _saberColor;
         private Color _arrowColor;
         private Color _missedAreaColor;
         private Color _sliceColor;
         private bool _needsUpdate;
+        public bool isActive { get; private set; }
+
+        public void SetActive(bool isActive)
+        {
+            this.isActive = isActive;
+            gameObject.SetActive(isActive);
+            _background.gameObject.SetActive(isActive);
+            _arrow.gameObject.SetActive(isActive);
+            _circle.gameObject.SetActive(isActive);
+            _missedArea.gameObject.SetActive(isActive);
+            _slice.gameObject.SetActive(isActive);
+        }
+
+        public void Dispose()
+        {
+            SetActive(false);
+            _background = null!;
+            _arrow = null!;
+            _circle = null!;
+            _missedArea = null!;
+            _slice = null!;
+        }
 
         [Inject]
         internal void Construct(NsvAssetLoader assetLoader, ColorManager colorManager)
@@ -39,6 +60,86 @@ namespace SliceVisualizer.Core
             _config = PluginConfig.Instance;
 
             BuildNote(assetLoader);
+        }
+
+        internal void Init(Transform parent)
+        {
+            gameObject.GetComponent<RectTransform>().SetParent(parent);
+        }
+
+        internal void SetData(NoteController noteController, NoteCutInfo noteCutInfo, NoteData noteData)
+        {
+            // Extract cube rotation from actual cube rotation
+            var cubeRotation = _config.RotationFromCubeTransform
+                ? noteController.noteTransform.localRotation.eulerAngles.z
+                : noteData.cutDirection.RotationAngle();
+            // Using built-in rotationAngle conversion.
+            // Please note that it's range is from [-180° <=> 180°[ compared to [0° <=> 360°[, but that shouldn't make a difference.
+
+            SetCubeState(noteController, noteCutInfo, noteData, cubeRotation);
+
+            SetSliceState(noteController, noteCutInfo, cubeRotation);
+            SetActive(true);
+        }
+
+        internal bool ExternalUpdate(float delta = 0f)
+        {
+            _aliveTime += delta;
+            if (_aliveTime > _config.CubeLifetime)
+            {
+                SetActive(false);
+                return true;
+            }
+
+            var t = _aliveTime / _config.CubeLifetime;
+            var blockPosition = _blockTransform.localPosition;
+            var arrowAlpha = (_isDirectional ? 1f : 0f) * _config.UIOpacity;
+            blockPosition.z = Mathf.Lerp(-_config.PopDistance, _config.PopDistance, t);
+            _blockTransform.localPosition = blockPosition;
+
+            // calculate pop strength
+            var popStrength = 0f;
+            if (_aliveTime < _config.PopEnd)
+            {
+                popStrength = InvLerp(_config.PopEnd, 0.0f, t);
+                _needsUpdate = true;
+            }
+
+            // calculate fade out opacity
+            var alpha = _config.UIOpacity;
+            if (_aliveTime > _config.FadeStart)
+            {
+                var fadeT = InvLerp(_config.FadeStart, 1.0f, t);
+                alpha *= Mathf.Lerp(1f, 0f, fadeT);
+                _needsUpdate = true;
+            }
+
+            if (_needsUpdate)
+            {
+                _background.color = Fade(Pop(_color, popStrength), alpha);
+                _arrow.color = Fade(_arrowColor, arrowAlpha * alpha);
+                _circle.color = Fade(_config.CenterColor, alpha);
+                _missedArea.color = Fade(_missedAreaColor, alpha);
+                _slice.color = Fade(_sliceColor, alpha);
+                _needsUpdate = false;
+            }
+            return false;
+        }
+
+        private static Color Fade(Color color, float alpha)
+        {
+            color.a *= alpha;
+            return color;
+        }
+
+        private static float InvLerp(float start, float end, float x)
+        {
+            return Mathf.Clamp((x - start) / (end - start), 0f, 1f);
+        }
+
+        private static Color Pop(Color color, float amount)
+        {
+            return color * (1.0f - amount) + amount * Color.white;
         }
 
         private void BuildNote(NsvAssetLoader assetLoader)
@@ -86,7 +187,7 @@ namespace SliceVisualizer.Core
                 var backgroundGO = new GameObject("RoundRect");
                 var background = backgroundGO.AddComponent<SpriteRenderer>();
                 var backgroundTransform = backgroundGO.AddComponent<RectTransform>();
-                background.material = assetLoader.UINoGlowMaterial;
+                background.material = assetLoader.UiNoGlowMaterial;
                 // background.color = new Color(1.0f, 0.5f, 0.5f, 1.0f);
                 // background.sortingLayerID = SortingLayerID;
                 background.sortingOrder = -4;
@@ -109,7 +210,7 @@ namespace SliceVisualizer.Core
                 var circleGO = new GameObject("Circle");
                 var circle = circleGO.AddComponent<SpriteRenderer>();
                 var circleTransform = circleGO.AddComponent<RectTransform>();
-                circle.material = assetLoader.UINoGlowMaterial;
+                circle.material = assetLoader.UiNoGlowMaterial;
                 circle.color = _config.CenterColor;
                 // circle.sortingLayerID = SortingLayerID;
                 circle.sortingOrder = -3;
@@ -133,7 +234,7 @@ namespace SliceVisualizer.Core
                 var arrowGO = new GameObject("Arrow");
                 var arrow = arrowGO.AddComponent<SpriteRenderer>();
                 var arrowTransform = arrowGO.AddComponent<RectTransform>();
-                arrow.material = assetLoader.UINoGlowMaterial;
+                arrow.material = assetLoader.UiNoGlowMaterial;
                 arrow.color = _config.ArrowColor;
                 // arrow.sortingLayerID = SortingLayerID;
                 arrow.sortingOrder = -2;
@@ -167,7 +268,7 @@ namespace SliceVisualizer.Core
                     var missedAreaGO = new GameObject("MissedArea");
                     var missedArea = missedAreaGO.AddComponent<SpriteRenderer>();
                     var missedAreaTransform = missedAreaGO.AddComponent<RectTransform>();
-                    missedArea.material = assetLoader.UINoGlowMaterial;
+                    missedArea.material = assetLoader.UiNoGlowMaterial;
                     missedArea.sprite = assetLoader.White;
                     missedArea.color = _config.MissedAreaColor;
                     // missedArea.sortingLayerID = SortingLayerID;
@@ -186,7 +287,7 @@ namespace SliceVisualizer.Core
                     var sliceGO = new GameObject("Slice");
                     var slice = sliceGO.AddComponent<SpriteRenderer>();
                     var sliceTransform = sliceGO.AddComponent<RectTransform>();
-                    slice.material = assetLoader.UINoGlowMaterial;
+                    slice.material = assetLoader.UiNoGlowMaterial;
                     slice.sprite = assetLoader.White;
                     slice.color = _config.SliceColor;
                     // slice.sortingLayerID = SortingLayerID;
@@ -202,26 +303,6 @@ namespace SliceVisualizer.Core
             }
 
             SetActive(false);
-        }
-
-        internal void Init(Transform parent)
-        {
-            gameObject.GetComponent<RectTransform>().SetParent(parent);
-        }
-
-        internal void SetData(NoteController noteController, NoteCutInfo noteCutInfo, NoteData noteData)
-        {
-            // Extract cube rotation from actual cube rotation
-            var cubeRotation = _config.RotationFromCubeTransform
-                ? noteController.noteTransform.localRotation.eulerAngles.z
-                : noteData.cutDirection.RotationAngle();
-            // Using built-in rotationAngle conversion.
-            // Please note that it's range is from [-180° <=> 180°[ compared to [0° <=> 360°[, but that shouldn't make a difference.
-
-            SetCubeState(noteController, noteCutInfo, noteData, cubeRotation);
-
-            SetSliceState(noteController, noteCutInfo, cubeRotation);
-            SetActive(true);
         }
 
         private void SetCubeState(NoteController noteController, NoteCutInfo noteCutInfo, NoteData noteData, float cubeRotation)
@@ -308,87 +389,6 @@ namespace SliceVisualizer.Core
 
             _sliceTransform.localRotation = Quaternion.identity;
             _sliceTransform.localPosition = new Vector3(sliceOffset - _config.SliceWidth * 0.5f, -0.5f, 0f);
-        }
-
-        internal bool ExternalUpdate(float delta = 0f)
-        {
-            _aliveTime += delta;
-            if (_aliveTime > _config.CubeLifetime)
-            {
-                SetActive(false);
-                return true;
-            }
-
-            var t = _aliveTime / _config.CubeLifetime;
-            var blockPosition = _blockTransform.localPosition;
-            var arrowAlpha = (_isDirectional ? 1f : 0f) * _config.UIOpacity;
-            blockPosition.z = Mathf.Lerp(-_config.PopDistance, _config.PopDistance, t);
-            _blockTransform.localPosition = blockPosition;
-
-            // calculate pop strength
-            var popStrength = 0f;
-            if (_aliveTime < _config.PopEnd)
-            {
-                popStrength = InvLerp(_config.PopEnd, 0.0f, t);
-                _needsUpdate = true;
-            }
-
-            // calculate fade out opacity
-            var alpha = _config.UIOpacity;
-            if (_aliveTime > _config.FadeStart)
-            {
-                var fadeT = InvLerp(_config.FadeStart, 1.0f, t);
-                alpha *= Mathf.Lerp(1f, 0f, fadeT);
-                _needsUpdate = true;
-            }
-
-            if (_needsUpdate)
-            {
-                _background.color = Fade(Pop(_color, popStrength), alpha);
-                _arrow.color = Fade(_arrowColor, arrowAlpha * alpha);
-                _circle.color = Fade(_config.CenterColor, alpha);
-                _missedArea.color = Fade(_missedAreaColor, alpha);
-                _slice.color = Fade(_sliceColor, alpha);
-                _needsUpdate = false;
-            }
-            return false;
-        }
-
-        private static Color Fade(Color color, float alpha)
-        {
-            color.a *= alpha;
-            return color;
-        }
-
-        private static float InvLerp(float start, float end, float x)
-        {
-            return Mathf.Clamp((x - start) / (end - start), 0f, 1f);
-        }
-
-        private static Color Pop(Color color, float amount)
-        {
-            return color * (1.0f - amount) + amount * Color.white;
-        }
-
-        public void SetActive(bool isActive)
-        {
-            this.isActive = isActive;
-            gameObject.SetActive(isActive);
-            _background.gameObject.SetActive(isActive);
-            _arrow.gameObject.SetActive(isActive);
-            _circle.gameObject.SetActive(isActive);
-            _missedArea.gameObject.SetActive(isActive);
-            _slice.gameObject.SetActive(isActive);
-        }
-
-        public void Dispose()
-        {
-            SetActive(false);
-            _background = null!;
-            _arrow = null!;
-            _circle = null!;
-            _missedArea = null!;
-            _slice = null!;
         }
     }
 }
