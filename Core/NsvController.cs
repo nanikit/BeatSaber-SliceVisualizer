@@ -13,6 +13,7 @@ namespace SliceVisualizer.Core
 {
     internal class NsvController : IInitializable, ITickable, IDisposable
     {
+        private static readonly int MaxItems = 12;
         private readonly PluginConfig _config;
         private readonly SiraLog _logger;
         private readonly BeatmapObjectManager _beatmapObjectManager;
@@ -20,8 +21,6 @@ namespace SliceVisualizer.Core
         private readonly Factories.NsvBlockFactory _blockFactory;
 
         private GameObject _canvasGO = null!;
-
-        private static readonly int MaxItems = 12;
 
         public NsvController(BeatmapObjectManager beatmapObjectManager, Factories.NsvBlockFactory blockFactory, SiraLog logger)
         {
@@ -72,30 +71,6 @@ namespace SliceVisualizer.Core
         public void Dispose()
         {
             _beatmapObjectManager.noteWasCutEvent -= OnNoteCut;
-
-            foreach (var slicedBlock in _slicedBlockPool)
-            {
-                if (slicedBlock is null) { continue; }
-                slicedBlock.Dispose();
-            }
-        }
-        
-        private void OnNoteCut(NoteController noteController, in NoteCutInfo noteCutInfo)
-        {
-            if (!_config.Enabled)
-            {
-                return;
-            }
-
-            // Re-use cubes at the same column & layer to avoid UI cluttering
-            var noteData = noteController.noteData;
-            // doing the modulus twice is required for negative indices
-            var lineLayer = (((int) noteController.noteData.noteLineLayer % 3) + 3) % 3;
-            var lineIndex = ((noteController.noteData.lineIndex % 4) + 4) % 4;
-            var blockIndex = lineIndex + 4 * lineLayer;
-            var slicedBlock = _slicedBlockPool[blockIndex];
-            if (slicedBlock is null) { return; }
-            slicedBlock.SetData(noteController, noteCutInfo, noteData);
         }
 
         public void CreateCheckbox()
@@ -120,6 +95,25 @@ namespace SliceVisualizer.Core
             var toggleSetting = toggleObject.GetComponent<ToggleSetting>();
             toggleSetting.Value = _config.Enabled;
             toggleSetting.toggle.onValueChanged.AddListener(enabled => _config.Enabled = enabled);
+        }
+
+        private void OnNoteCut(NoteController noteController, in NoteCutInfo noteCutInfo)
+        {
+            if (!_config.Enabled)
+            {
+                return;
+            }
+
+            // Re-use cubes at the same column & layer to avoid UI cluttering
+            var noteData = noteController.noteData;
+            // doing the modulus twice is required for negative indices
+            var lineLayer = (((int) noteController.noteData.noteLineLayer % 3) + 3) % 3;
+            var lineIndex = ((noteController.noteData.lineIndex % 4) + 4) % 4;
+            var blockIndex = lineIndex + 4 * lineLayer;
+            var slicedBlock = _slicedBlockPool[blockIndex];
+            if (slicedBlock is null)
+            { return; }
+            slicedBlock.SetData(noteController, noteCutInfo, noteData);
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using SliceVisualizer.Configuration;
 using SliceVisualizer.Models;
 using UnityEngine;
@@ -7,7 +6,7 @@ using Zenject;
 
 namespace SliceVisualizer.Core
 {
-    internal class NsvSlicedBlock : MonoBehaviour, IDisposable
+    internal class NsvSlicedBlock : MonoBehaviour
     {
         private PluginConfig _config = null!;
         private ColorManager _colorManager = null!;
@@ -41,16 +40,6 @@ namespace SliceVisualizer.Core
             _circle.gameObject.SetActive(isActive);
             _missedArea.gameObject.SetActive(isActive);
             _slice.gameObject.SetActive(isActive);
-        }
-
-        public void Dispose()
-        {
-            SetActive(false);
-            _background = null!;
-            _arrow = null!;
-            _circle = null!;
-            _missedArea = null!;
-            _slice = null!;
         }
 
         [Inject]
