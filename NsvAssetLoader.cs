@@ -6,27 +6,9 @@ using Zenject;
 
 namespace SliceVisualizer
 {
-    internal class NsvAssetLoader : IInitializable, IDisposable
+    internal class NsvAssetLoader(SiraLog logger) : IInitializable
     {
         private Material? _uiNoGlowMaterial;
-        private SiraLog _siraLog;
-
-        public NsvAssetLoader(SiraLog siraLog)
-        {
-            _siraLog = siraLog;
-
-            var bundle = TryLoadAssetBundle();
-            if (bundle == null)
-            {
-                _siraLog.Warn($"Couldn't find shader asset bundle");
-                return;
-            }
-
-            var shader = bundle.LoadAsset<Shader>("Assets/UnlitGlow.shader");
-            _uiNoGlowMaterial = new Material(shader);
-
-            bundle.Unload(false);
-        }
 
         public Material UiNoGlowMaterial => _uiNoGlowMaterial ?? throw new InvalidOperationException("Asset loader not initialized");
 
@@ -41,20 +23,22 @@ namespace SliceVisualizer
         public void Initialize()
         {
             var assembly = Assembly.GetExecutingAssembly();
-            RRect = LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.RRect.png");
-            Circle = LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.Circle.png");
-            Arrow = LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.Arrow.png");
-            White = LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.White.png", 1f);
-        }
+            RRect ??= LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.RRect.png");
+            Circle ??= LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.Circle.png");
+            Arrow ??= LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.Arrow.png");
+            White ??= LoadSpriteFromResources(assembly, "SliceVisualizer.Assets.White.png", 1f);
 
-        public void Dispose()
-        {
-            _uiNoGlowMaterial = null;
+            var bundle = TryLoadAssetBundle();
+            if (bundle == null)
+            {
+                logger.Warn($"Couldn't find shader asset bundle");
+                return;
+            }
 
-            RRect = null;
-            Circle = null;
-            Arrow = null;
-            White = null;
+            var shader = bundle.LoadAsset<Shader>("Assets/UnlitSimple.shader");
+            _uiNoGlowMaterial = new Material(shader);
+
+            bundle.Unload(false);
         }
 
         private AssetBundle? TryLoadAssetBundle()
@@ -69,14 +53,15 @@ namespace SliceVisualizer
             using var stream = assembly.GetManifestResourceStream(resourcePath);
             if (stream == null)
             {
-                _siraLog.Warn($"Couldn't find embedded resource {resourcePath}");
+                logger.Warn($"Couldn't find embedded resource {resourcePath}");
                 return null;
             }
 
-            byte[] imageData = new byte[stream.Length];
+            var imageData = new byte[stream.Length];
             stream.Read(imageData, 0, (int) stream.Length);
             if (imageData.Length == 0)
             {
+                logger.Warn($"Image size is 0: {resourcePath}");
                 return null;
             }
 
@@ -86,7 +71,7 @@ namespace SliceVisualizer
             var rect = new Rect(0, 0, texture.width, texture.height);
             var sprite = Sprite.Create(texture, rect, Vector2.zero, pixelsPerUnit);
 
-            _siraLog.Info($"Successfully loaded sprite {resourcePath}, w={texture.width}, h={texture.height}");
+            logger.Info($"Successfully loaded sprite {resourcePath}, w={texture.width}, h={texture.height}");
 
             return sprite;
         }
