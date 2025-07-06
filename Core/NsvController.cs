@@ -94,7 +94,7 @@ namespace SliceVisualizer.Core
 
             var toggleSetting = toggleObject.GetComponent<ToggleSetting>();
             toggleSetting.Value = _config.Enabled;
-            toggleSetting.toggle.onValueChanged.AddListener(enabled => _config.Enabled = enabled);
+            toggleSetting.Toggle.onValueChanged.AddListener(enabled => _config.Enabled = enabled);
         }
 
         private void OnNoteCut(NoteController noteController, in NoteCutInfo noteCutInfo)

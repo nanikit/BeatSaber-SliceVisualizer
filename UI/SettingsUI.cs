@@ -1,9 +1,11 @@
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
+using Zenject;
 
 namespace SliceVisualizer.UI
 {
-    internal class SettingsUI
+    internal class SettingsUI : IInitializable
+
     {
         public static SliceVisualizerFlowCoordinator? SliceVisualizerFlowCoordinator;
         public static bool Created;
@@ -13,7 +15,7 @@ namespace SliceVisualizer.UI
             if (!Created)
             {
                 var menuButton = new MenuButton("SliceVisualizer", "Chase the perfect slice", ShowFlow);
-                MenuButtons.instance.RegisterButton(menuButton);
+                MenuButtons.Instance.RegisterButton(menuButton);
                 Created = true;
             }
         }
@@ -25,6 +27,11 @@ namespace SliceVisualizer.UI
                 SliceVisualizerFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<SliceVisualizerFlowCoordinator>();
             }
             BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(SliceVisualizerFlowCoordinator);
+        }
+
+        public void Initialize()
+        {
+            CreateMenu();
         }
     }
 }

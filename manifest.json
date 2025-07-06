@@ -1,14 +1,14 @@
 {
-  "$schema": "https://raw.githubusercontent.com/beat-saber-modding-group/BSIPA-MetadataFileSchema/master/Schema.json",
-  "id": "SliceVisualizer",
-  "name": "SliceVisualizer",
-  "author": "Igor null <m1el.2027@gmail.com>",
-  "version": "0.1.4",
-  "description": "Shows your cut data to train your accuracy",
-  "gameVersion": "1.34.2",
-  "dependsOn": {
-    "BeatSaberMarkupLanguage": "^1.5.2",
-    "BSIPA": "^4.2.2",
-    "SiraUtil": "^3.0.0"
-  }
+    "$schema": "https://raw.githubusercontent.com/beat-saber-modding-group/BSIPA-MetadataFileSchema/master/Schema.json",
+    "id": "SliceVisualizer",
+    "name": "SliceVisualizer",
+    "author": "Igor null <m1el.2027@gmail.com>",
+    "version": "0.1.5",
+    "description": "Shows your cut data to train your accuracy",
+    "gameVersion": "1.39.1",
+    "dependsOn": {
+        "BeatSaberMarkupLanguage": "^1.5.2",
+        "BSIPA": "^4.2.2",
+        "SiraUtil": "^3.0.0"
+    }
 }

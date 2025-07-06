@@ -14,7 +14,6 @@ namespace SliceVisualizer.Installers
         {
             _config = config;
             PluginConfig.Instance = config;
-            SettingsUI.CreateMenu();
         }
 
         public override void InstallBindings()
