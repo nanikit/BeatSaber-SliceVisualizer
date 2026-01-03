@@ -29,6 +29,8 @@ namespace SliceVisualizer.Core
             _beatmapObjectManager = beatmapObjectManager;
             _slicedBlockPool = new NsvSlicedBlock[MaxItems];
             _blockFactory = blockFactory;
+
+            _config.Reloaded += OnConfigChanged;
         }
 
         public void Initialize()
@@ -45,6 +47,7 @@ namespace SliceVisualizer.Core
                 _slicedBlockPool[i] = _blockFactory.Create();
                 _slicedBlockPool[i].Init(_canvasGO.transform);
             }
+            ApplyCanvasLayer();
 
             try
             {
@@ -71,6 +74,35 @@ namespace SliceVisualizer.Core
         public void Dispose()
         {
             _beatmapObjectManager.noteWasCutEvent -= OnNoteCut;
+            _config.Reloaded -= OnConfigChanged;
+        }
+
+        private void OnConfigChanged(PluginConfig config)
+        {
+            _logger.Info("Config reloaded, applying changes");
+            _canvasGO.transform.localScale = Vector3.one * _config.CanvasScale;
+            _canvasGO.transform.localPosition = _config.CanvasOffset;
+            _canvasGO.transform.eulerAngles = _config.CanvasRotation;
+            ApplyCanvasLayer();
+
+            foreach (var slicedBlock in _slicedBlockPool)
+            {
+                slicedBlock?.ApplyConfig();
+            }
+        }
+
+        private void ApplyCanvasLayer()
+        {
+            SetLayerRecursively(_canvasGO, _config.CanvasLayer);
+        }
+
+        private static void SetLayerRecursively(GameObject go, int layer)
+        {
+            go.layer = layer;
+            foreach (Transform child in go.transform)
+            {
+                SetLayerRecursively(child.gameObject, layer);
+            }
         }
 
         public void CreateCheckbox()

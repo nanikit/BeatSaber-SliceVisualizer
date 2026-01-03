@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using IPA.Config.Stores;
 using IPA.Config.Stores.Attributes;
@@ -11,6 +12,9 @@ namespace SliceVisualizer.Configuration
     internal class PluginConfig
     {
         internal static PluginConfig Instance = null!;
+
+        public event Action<PluginConfig> Reloaded = delegate { };
+
         public virtual bool Enabled { get; set; } = true;
         public virtual float SliceWidth { get; set; } = 0.05f;
 
@@ -47,5 +51,14 @@ namespace SliceVisualizer.Configuration
         public virtual Vector3 CanvasOffset { get; set; } = new Vector3(0f, 0f, 16f);
         public virtual Vector3 CanvasRotation { get; set; } = new Vector3(0f, 0f, 0f);
         public virtual float CanvasScale { get; set; } = 1f;
+        public virtual int CanvasLayer { get; set; } = 0;
+
+        /// <summary>
+        /// This is called whenever BSIPA reads the config from disk (including when file changes are detected).
+        /// </summary>
+        public virtual void OnReload()
+        {
+            Reloaded(this);
+        }
     }
 }

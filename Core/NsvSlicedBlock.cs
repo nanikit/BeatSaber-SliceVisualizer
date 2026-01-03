@@ -42,6 +42,19 @@ namespace SliceVisualizer.Core
             _slice.gameObject.SetActive(isActive);
         }
 
+        internal void ApplyConfig()
+        {
+            _blockTransform.localScale = Vector3.one * _config.CubeScale;
+            _circle.transform.localScale = Vector3.one * _config.CenterScale;
+            _arrow.transform.localScale = Vector3.one * _config.ArrowScale;
+            _sliceTransform.localScale = new Vector3(_config.SliceWidth, 1f, 1f);
+
+            _missedAreaColor = _config.MissedAreaColor;
+            _sliceColor = _config.SliceColor;
+            _arrowColor = _config.ArrowColor;
+            _needsUpdate = true;
+        }
+
         [Inject]
         internal void Construct(NsvAssetLoader assetLoader, ColorManager colorManager)
         {
